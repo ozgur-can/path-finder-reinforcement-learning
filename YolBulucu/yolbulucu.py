@@ -90,7 +90,7 @@ class Program():
     rTable = []
     isStarted = False
     genCount = 1
-    iteration = 10  # run loop() for x iteration time
+    iteration = 10
     traps = []
 
     def SetTraps(self):
@@ -98,6 +98,8 @@ class Program():
         self.rTable[1][2] = -1
         self.rTable[1][3] = -1
         self.rTable[1][4] = -1
+        # self.rTable[2][0] = 20
+        # self.rTable[3][1] = 30
 
     # r ve q tablosuna ilk atamalar yapildi
     def SetInitsForTables(self):
@@ -116,6 +118,14 @@ class Program():
             self.qTable.append([])
             for j in range(self.cols):
                 self.qTable[i].append(0)
+                # self.qTable[i].append(round(random.uniform(0, 1.0), 1))
+
+    def CalculateValues(self, routes):
+        values = []
+        for route in routes:
+            values.append(self.rTable[route[0]][route[1]])
+
+        return values
 
     # find available routes
     def FindRoutes(self, x, y):
@@ -129,10 +139,7 @@ class Program():
         for route in routes:
             for trap in self.traps:
                 if route[0] == trap.x / boxSize and route[1] == trap.y / boxSize:
-                    # print "cakisma var"
                     routes.remove(route)
-                else:
-                    print "cakisma yok"
 
         return routes
 
@@ -143,7 +150,7 @@ class Program():
             return False
 
     def Loop(self):
-        box = Box(100, 50, boxSize)
+        box = Box(150, 150, boxSize)
         terminal = Terminal(boxSize)
 
         # tuzaklarin listeye eklenmesi
@@ -164,11 +171,14 @@ class Program():
                 for trap in self.traps:
                     trap.Show()
 
-                # bir rota bul
+                # bir rota bul ( rota bulma olayını duzeltmelisin )
                 routes = self.FindRoutes(box.x / boxSize, box.y / boxSize)
-                print routes
+                rValues = self.CalculateValues(routes)
+                indexOfMaxValue = rValues.index(max(rValues))  # rValues(0),1,2..
+
+                box.MoveTo(routes[indexOfMaxValue][0] * boxSize, routes[indexOfMaxValue][1] * boxSize)
+                print box.x, box.y, "maxVal", rValues[indexOfMaxValue]
                 # Q update fonksiyonunu uygula
-                # kutuyu hareket ettir
 
                 # hedefe ulasma durumu
                 if box.x == terminal.x & box.y == terminal.y and not self.IsEnd():
@@ -193,6 +203,8 @@ sim.Loop()
 
 pygame.quit()
 quit()
+
+# print sim.qTable
 
 # TODOS
 # (2) algoritma kısmına başla(!!!)
