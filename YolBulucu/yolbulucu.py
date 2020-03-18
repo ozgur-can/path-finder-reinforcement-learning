@@ -1,3 +1,4 @@
+# coding=utf-8
 import pygame
 import random
 
@@ -113,6 +114,7 @@ class Program():
         terminal = Terminal(boxSize)
         traps = []
 
+        # tuzaklarin listeye eklenmesi
         for idx, i in enumerate(sim.rTable):
             for idj, j in enumerate(i):
                 if j == -1:
@@ -124,7 +126,12 @@ class Program():
             terminal.Show()
             for trap in traps:
                 trap.Show()
-            # box.MoveTo(box.x + boxSize, box.y)
+
+            # hedefe ulasma durumu
+            if box.x == terminal.x & box.y == terminal.y:
+                self.genNumber += 1
+                box.MoveTo(0, 0)
+                # q tablosu guncellenecek burada(!)
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -133,6 +140,14 @@ class Program():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.isStarted = True
+                    if event.key == pygame.K_LEFT:
+                        box.MoveTo(box.x - boxSize, box.y)
+                    if event.key == pygame.K_RIGHT:
+                        box.MoveTo(box.x + boxSize, box.y)
+                    if event.key == pygame.K_UP:
+                        box.MoveTo(box.x, box.y - boxSize)
+                    if event.key == pygame.K_DOWN:
+                        box.MoveTo(box.x, box.y + boxSize)
 
             clock.tick(7)
 
@@ -141,5 +156,7 @@ sim = Program()
 sim.SetInitsForTables()
 sim.Loop()
 
-
-# print(random.randrange(0, 100))
+# TODOS
+# (2) algoritma kısmına başla
+# (3) q tablosunu guncelle
+# print(random.randrange(0, 100)) random sayi tutmak icin kullan
