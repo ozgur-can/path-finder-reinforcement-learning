@@ -81,8 +81,8 @@ class Terminal():  # hedef nesnesi
 
 
 class Program():
-    alfa = 0.7
-    discountFactor = 1
+    alfa = 0.5
+    discountFactor = 0.8
     rows = 10
     cols = 10
     reward = 100
@@ -140,7 +140,8 @@ class Program():
     # find available routes
     def FindRoutes(self, x, y):
         routes = []
-        routesWithOutNegativeVal = []
+        routesWithNonNegativeVals = []
+        trapList = []
 
         routes.append([x - 1, y])
         routes.append([x, y - 1])
@@ -148,15 +149,15 @@ class Program():
         routes.append([x, y + 1])
 
         for route in routes:
-            if route[0] > 0 or route[1] > 0 or route[0] > 0 and route[1] > 0:
-                routesWithOutNegativeVal.append(route)
+            if route[0] > -1 and route[1] > -1:
+                routesWithNonNegativeVals.append(route)
 
-        for route in routesWithOutNegativeVal:
-            for trap in self.traps:
-                if route[0] == trap.x / boxSize and route[1] == trap.y / boxSize:
-                    routesWithOutNegativeVal.remove(route)
+        for trap in self.traps:
+            trapList.append([trap.x / boxSize, trap.y / boxSize])
 
-        return routesWithOutNegativeVal
+        diff = [value for value in routesWithNonNegativeVals if value not in trapList]
+
+        return diff
 
     def IsEnd(self):
         if self.genCount == self.iteration:
@@ -165,10 +166,10 @@ class Program():
             return False
 
     def Loop(self):
-        box = Box(200, 150, boxSize)
+        box = Box(100, 0, boxSize)
         terminal = Terminal(boxSize)
 
-        # tuzaklarin listeye eklenmesi
+        # engellerin listeye eklenmesi
         for idx, i in enumerate(sim.rTable):
             for idj, j in enumerate(i):
                 if j == -1:
@@ -196,9 +197,12 @@ class Program():
 
                 qX = box.x / boxSize
                 qY = box.y / boxSize
-                self.qTable[qX][qY] = self.qTable[qX][qY] + self.alfa * (
-                        self.rTable[routes[maxQValueIndex][0]][routes[maxQValueIndex][1]] + self.discountFactor *
+                rV = self.rTable[routes[maxQValueIndex][0]][routes[maxQValueIndex][1]]
+                formula = self.alfa * (
+                        rV + self.discountFactor *
                         self.qTable[routes[maxNextQValueIndex][0]][routes[maxNextQValueIndex][1]])
+
+                self.qTable[qX][qY] = self.qTable[qX][qY] + formula
 
                 box.MoveTo(routes[maxQValueIndex][0] * boxSize, routes[maxQValueIndex][1] * boxSize)
 
@@ -224,6 +228,10 @@ sim.Loop()
 
 pygame.quit()
 quit()
+
+# a = [[1, 2], [3, 4], [5, 1]]
+# b = [[1, 2], [7, 6], [5, 1]]
+# print [i for i, j in zip(a, b) if i != j]
 
 # print sim.qTable
 
