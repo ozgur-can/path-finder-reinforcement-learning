@@ -81,10 +81,10 @@ class Terminal():  # hedef nesnesi
 
 
 class Program():
-    alfa = 0.1
+    alfa = 0.7
     discountFactor = 1
-    rows = 5
-    cols = 5
+    rows = 10
+    cols = 10
     reward = 100
     qTable = []
     rTable = []
@@ -94,11 +94,14 @@ class Program():
     traps = []
 
     def SetTraps(self):
-        self.rTable[1][1] = -1
+        # self.rTable[1][0] = -1
+        # self.rTable[1][1] = -1
         self.rTable[1][2] = -1
         self.rTable[1][3] = -1
         self.rTable[1][4] = -1
-        # self.rTable[2][0] = 20
+        self.rTable[1][5] = -1
+        self.rTable[1][6] = -1
+        # self.rTable[3][3] = 20
         # self.rTable[3][1] = 30
 
     # r ve q tablosuna ilk atamalar yapildi
@@ -120,16 +123,24 @@ class Program():
                 self.qTable[i].append(0)
                 # self.qTable[i].append(round(random.uniform(0, 1.0), 1))
 
-    def CalculateValues(self, routes):
+    def CalculateRValues(self, routes):
         values = []
         for route in routes:
             values.append(self.rTable[route[0]][route[1]])
 
         return values
 
+    def CalculateQValues(self, routes):
+        values = []
+        for route in routes:
+            values.append(self.qTable[route[0]][route[1]])
+
+        return values
+
     # find available routes
     def FindRoutes(self, x, y):
         routes = []
+        routesWithOutNegativeVal = []
 
         routes.append([x - 1, y])
         routes.append([x, y - 1])
@@ -137,11 +148,15 @@ class Program():
         routes.append([x, y + 1])
 
         for route in routes:
+            if route[0] > 0 or route[1] > 0 or route[0] > 0 and route[1] > 0:
+                routesWithOutNegativeVal.append(route)
+
+        for route in routesWithOutNegativeVal:
             for trap in self.traps:
                 if route[0] == trap.x / boxSize and route[1] == trap.y / boxSize:
-                    routes.remove(route)
+                    routesWithOutNegativeVal.remove(route)
 
-        return routes
+        return routesWithOutNegativeVal
 
     def IsEnd(self):
         if self.genCount == self.iteration:
@@ -150,7 +165,7 @@ class Program():
             return False
 
     def Loop(self):
-        box = Box(150, 150, boxSize)
+        box = Box(200, 150, boxSize)
         terminal = Terminal(boxSize)
 
         # tuzaklarin listeye eklenmesi
@@ -171,16 +186,22 @@ class Program():
                 for trap in self.traps:
                     trap.Show()
 
-                # bir rota bul ( rota bulma olayını duzeltmelisin )
                 routes = self.FindRoutes(box.x / boxSize, box.y / boxSize)
-                rValues = self.CalculateValues(routes)
-                indexOfMaxValue = rValues.index(max(rValues))  # rValues(0),1,2..
+                qValues = self.CalculateQValues(routes)
+                maxQValueIndex = qValues.index(max(qValues))
 
-                box.MoveTo(routes[indexOfMaxValue][0] * boxSize, routes[indexOfMaxValue][1] * boxSize)
-                print box.x, box.y, "maxVal", rValues[indexOfMaxValue]
-                # Q update fonksiyonunu uygula
+                routesForNext = self.FindRoutes(routes[maxQValueIndex][0], routes[maxQValueIndex][1])
+                qValuesForNext = self.CalculateQValues(routesForNext)
+                maxNextQValueIndex = qValuesForNext.index(max(qValuesForNext))
 
-                # hedefe ulasma durumu
+                qX = box.x / boxSize
+                qY = box.y / boxSize
+                self.qTable[qX][qY] = self.qTable[qX][qY] + self.alfa * (
+                        self.rTable[routes[maxQValueIndex][0]][routes[maxQValueIndex][1]] + self.discountFactor *
+                        self.qTable[routes[maxNextQValueIndex][0]][routes[maxNextQValueIndex][1]])
+
+                box.MoveTo(routes[maxQValueIndex][0] * boxSize, routes[maxQValueIndex][1] * boxSize)
+
                 if box.x == terminal.x & box.y == terminal.y and not self.IsEnd():
                     self.genCount += 1
                     box.MoveTo(0, 0)
@@ -191,7 +212,7 @@ class Program():
                 if event.type == pygame.QUIT:
                     self.isStarted = True
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_ESCAPE:
                         self.isStarted = True
 
             clock.tick(7)
