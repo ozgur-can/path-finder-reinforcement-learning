@@ -10,6 +10,7 @@ green = (77, 213, 153)
 blue = (0, 51, 102)
 red = (225, 51, 51)
 white = (225, 255, 255)
+black = (0, 0, 0)
 
 width = 500
 height = 500
@@ -23,6 +24,11 @@ clock = pygame.time.Clock()
 
 font_style = pygame.font.SysFont("bahnschrift", 25)
 score_font = pygame.font.SysFont("comicsansms", 35)
+
+
+def message(msg, color):
+    msgToShow = font_style.render(msg, True, color)
+    screen.blit(msgToShow, [width / 4, height / 2])
 
 
 class Box():  # hedefe gidecek olan nesne
@@ -83,17 +89,19 @@ class Program():
     qTable = []
     rTable = []
     isStarted = False
-    genNumber = 1
+    genCount = 1
+    iteration = 10  # run loop() for x iteration time
+    traps = []
 
     def SetTraps(self):
-        self.rTable[3][1] = -1
-        self.rTable[3][2] = -1
-        self.rTable[3][3] = -1
-        self.rTable[3][4] = -1
+        self.rTable[1][1] = -1
+        self.rTable[1][2] = -1
+        self.rTable[1][3] = -1
+        self.rTable[1][4] = -1
 
     # r ve q tablosuna ilk atamalar yapildi
     def SetInitsForTables(self):
-        # r tablosu atandi
+        # r table init
         for i in range(self.rows):
             self.rTable.append([])
             for j in range(self.cols):
@@ -103,36 +111,71 @@ class Program():
                     self.rTable[i].append(0)
         self.SetTraps()
 
-        # q tablosu atandi // baska duzenleme olmayacak
+        # q table init
         for i in range(self.rows):
             self.qTable.append([])
             for j in range(self.cols):
                 self.qTable[i].append(0)
 
+    # find available routes
+    def FindRoutes(self, x, y):
+        routes = []
+
+        routes.append([x - 1, y])
+        routes.append([x, y - 1])
+        routes.append([x + 1, y])
+        routes.append([x, y + 1])
+
+        for route in routes:
+            for trap in self.traps:
+                if route[0] == trap.x / boxSize and route[1] == trap.y / boxSize:
+                    # print "cakisma var"
+                    routes.remove(route)
+                else:
+                    print "cakisma yok"
+
+        return routes
+
+    def IsEnd(self):
+        if self.genCount == self.iteration:
+            return True
+        else:
+            return False
+
     def Loop(self):
-        box = Box(0, 0, boxSize)
+        box = Box(100, 50, boxSize)
         terminal = Terminal(boxSize)
-        traps = []
 
         # tuzaklarin listeye eklenmesi
         for idx, i in enumerate(sim.rTable):
             for idj, j in enumerate(i):
                 if j == -1:
-                    traps.append(Trap(idx * boxSize, idj * boxSize, boxSize))
+                    self.traps.append(Trap(idx * boxSize, idj * boxSize, boxSize))
 
         while not self.isStarted:
-            screen.fill(green)
-            box.Show()
-            terminal.Show()
-            for trap in traps:
-                trap.Show()
+            if self.genCount == 10:
+                message('reached to max genCount', black)
+                pygame.display.update()
 
-            # hedefe ulasma durumu
-            if box.x == terminal.x & box.y == terminal.y:
-                self.genNumber += 1
-                box.MoveTo(0, 0)
-                # q tablosu guncellenecek burada(!)
-            pygame.display.update()
+            else:
+                screen.fill(green)
+                box.Show()
+                terminal.Show()
+                for trap in self.traps:
+                    trap.Show()
+
+                # bir rota bul
+                routes = self.FindRoutes(box.x / boxSize, box.y / boxSize)
+                print routes
+                # Q update fonksiyonunu uygula
+                # kutuyu hareket ettir
+
+                # hedefe ulasma durumu
+                if box.x == terminal.x & box.y == terminal.y and not self.IsEnd():
+                    self.genCount += 1
+                    box.MoveTo(0, 0)
+
+                pygame.display.update()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -140,14 +183,6 @@ class Program():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.isStarted = True
-                    if event.key == pygame.K_LEFT:
-                        box.MoveTo(box.x - boxSize, box.y)
-                    if event.key == pygame.K_RIGHT:
-                        box.MoveTo(box.x + boxSize, box.y)
-                    if event.key == pygame.K_UP:
-                        box.MoveTo(box.x, box.y - boxSize)
-                    if event.key == pygame.K_DOWN:
-                        box.MoveTo(box.x, box.y + boxSize)
 
             clock.tick(7)
 
@@ -156,7 +191,10 @@ sim = Program()
 sim.SetInitsForTables()
 sim.Loop()
 
+pygame.quit()
+quit()
+
 # TODOS
-# (2) algoritma kısmına başla
+# (2) algoritma kısmına başla(!!!)
 # (3) q tablosunu guncelle
 # print(random.randrange(0, 100)) random sayi tutmak icin kullan
