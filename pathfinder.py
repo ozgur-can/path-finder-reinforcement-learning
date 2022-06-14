@@ -12,13 +12,13 @@ red = (225, 51, 51)
 white = (225, 255, 255)
 black = (0, 0, 0)
 
-width = 500
-height = 500
+width = 300
+height = 300
 
-boxSize = 50
+boxSize = 20
 
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption('Finding Terminal')
+pygame.display.set_caption('Path Finder')
 
 clock = pygame.time.Clock()
 
@@ -259,7 +259,6 @@ class Program():
 
 # özgür can altınok
 # Q learning ile gidilecek nokta için yol arama örneği
-# Q değerlerine göre hareket ediyor ancak hedef noktaya ulaşamıyor, bir hata var, 1. jenerasyonda kalıyor
 
 # mavi kutu => kırmızı kutuya ulaşması beklenen kutu
 # beyaz kutular => engeller
